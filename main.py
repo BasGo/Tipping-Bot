@@ -11,6 +11,10 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Constants
 
 BASE_URL = "https://www.kicktipp.de"
@@ -20,9 +24,14 @@ PASSWORD = os.getenv("KICKTIPP_PASSWORD")
 NAME_OF_COMPETITION = os.getenv("KICKTIPP_NAME_OF_COMPETITION")
 CHROMEDRIVER_PATH = "/Applications/chromedriver"
 ZAPIER_URL = os.getenv("ZAPIER_URL")
-
+HIGH_DIFF_QUOTIENT = int(os.getenv("HIGH_DIFF_QUOTIENT", default=4))
+OVERWRITE_TIPS = bool(os.getenv("OVERWRITE_TIPS", default=False))
+HOURS_UNTIL_GAME = int(os.getenv("HOURS_UNTIL_GAME", default=2))
 
 def execute():
+
+    # output config variables
+    outputEnvValues()
 
     # create driver
     try:
@@ -67,15 +76,15 @@ def execute():
                 by=By.XPATH, value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[2]').get_attribute('innerHTML')
             awayTeam = driver.find_element(
                 by=By.XPATH, value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[3]').get_attribute('innerHTML')
-            
+
             # find entry, enter if empty
             homeTipEntry = driver.find_element(by=By.XPATH,
                                                value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[4]/input[2]')
             awayTipEntry = driver.find_element(by=By.XPATH,
                                                value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[4]/input[3]')
 
-            # only calc tip and enter, when not entered already
-            if homeTipEntry.get_attribute('value') == '' and awayTipEntry.get_attribute('value') == '':
+            # only calc tip and enter, when not entered already or overwrite set to True
+            if OVERWRITE_TIPS or (homeTipEntry.get_attribute('value') == '' and awayTipEntry.get_attribute('value') == ''):
 
                 try:
                     # time of game
@@ -89,7 +98,7 @@ def execute():
 
                 # find quotes
                 quotes = driver.find_element(
-                    by=By.XPATH, value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[5]/a').get_property('innerHTML').split(sep=" / ")
+                    by=By.XPATH, value='//*[@id="tippabgabeSpiele"]/tbody/tr[' + str(i) + ']/td[5]/a').get_property('innerHTML').split(sep=" | ")
 
                 # print time and team names
                 print(homeTeam + " - " + awayTeam +
@@ -100,8 +109,8 @@ def execute():
                 print("Time until game: " + str(timeUntilGame))
 
                 # only tip if game starts in less than 2 hours
-                if timeUntilGame < timedelta(hours=2):
-                    print("Game starts in less than 2 hours. Tipping now...")
+                if timeUntilGame < timedelta(hours=HOURS_UNTIL_GAME):
+                    print(F"Game starts in less than {HOURS_UNTIL_GAME} hours. Tipping now...")
 
                     # print quotes
                     print("Quotes:" + str(quotes))
@@ -113,13 +122,14 @@ def execute():
                     print()
 
                     # send tips
+                    homeTipEntry.clear()
                     homeTipEntry.send_keys(tip[0])
+                    awayTipEntry.clear()
                     awayTipEntry.send_keys(tip[1])
 
                     # custom webhook to zapier
                     try:
-                        if sys.argv[2] == 'withZapier':
-                            url = ZAPIER_URL
+                        if ZAPIER_URL != None:
 
                             payload = {
                                 'date': time,
@@ -130,23 +140,21 @@ def execute():
                                 'quoteteam2': quotes[2],
                                 'tipteam1': tip[0],
                                 'tipteam2': tip[1]}
-                            files = [
-
-                            ]
+                            files = []
                             headers = {}
 
                             response = requests.request(
-                                "POST", url, headers=headers, data=payload, files=files)
+                                "POST", ZAPIER_URL, headers=headers, data=payload, files=files)
                     except IndexError:
                         pass
 
                 else:
-                    print("Game starts in more than 2 hours. Skipping...")
+                    print(F"Game starts in more than {HOURS_UNTIL_GAME} hours. Skipping...")
                     print()
             else:
                 # print out the tipped game
                 print(homeTeam + " - " + awayTeam)
-                
+
                 print("Game already tipped! Tip: " + homeTipEntry.get_attribute('value') + " - " + awayTipEntry.get_attribute('value'))
                 print()
 
@@ -187,7 +195,7 @@ def calculate_tip(home, draw, away):
     onemore = round(random.uniform(0, 1))
 
     # depending on the quotes, the factor is derived to decrease the tip for very unequal games
-    coefficient = 0.3 if round(abs(differenceHomeAndAway)) > 7 else 0.75
+    coefficient = 0.3 if round(abs(differenceHomeAndAway)) > HIGH_DIFF_QUOTIENT else 0.75
 
     # calculate tips
     if abs(differenceHomeAndAway) < 0.25:
@@ -214,8 +222,35 @@ def set_chrome_options() -> None:
     chrome_prefs["profile.default_content_settings"] = {"images": 2}
     return chrome_options
 
+def checkForEnvVars():
+    if os.getenv("KICKTIPP_EMAIL") is None:
+        print(os.environ.get("KICKTIPP_EMAIL"))
+        print("Please set the environment variable KICKTIPP_EMAIL")
+        exit(1)
+    if os.getenv("KICKTIPP_PASSWORD") is None:
+        print("Please set the environment variable KICKTIPP_PASSWORD")
+        exit(1)
+    if os.getenv("KICKTIPP_NAME_OF_COMPETITION") is None:
+        print("Please set the environment variable KICKTIPP_NAME_OF_COMPETITION")
+        exit(1)
+    if os.getenv("ZAPIER_URL") is None:
+        print("Warning: Zapier URL not set. No webhook will be sent.")
+
+    print("All environment variables are set. Starting the script...")
+
+def outputEnvValues():
+    # output config variables
+    print("Current environment variables:")
+    print(F"KICKTIPP_EMAIL = {EMAIL}")
+    print(F"KICKTIPP_NAME_OF_COMPETITION = {NAME_OF_COMPETITION}")
+    print(F"CHROMEDRIVER_PATH = {CHROMEDRIVER_PATH}")
+    print(F"OVERWRITE_TIPS = {OVERWRITE_TIPS}")
+    print(F"HIGH_DIFF_QUOTIENT = {HIGH_DIFF_QUOTIENT}")
+    print(F"HOURS_UNTIL_GAME = {HOURS_UNTIL_GAME}")
+    print()
 
 if __name__ == '__main__':
+    checkForEnvVars()
     while True:
         now = datetime.now().strftime('%d.%m.%y %H:%M')
         print(now + ": The script will execute now!\n")
