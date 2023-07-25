@@ -1,5 +1,5 @@
-IMAGE_NAME = antonengelhardt/kicktipp-bot:arm64
-# IMAGE_NAME = antonengelhardt/kicktipp-bot:amd64
+# IMAGE_NAME = BasGo/tipping-bot:arm64
+IMAGE_NAME = basgo/tipping-bot:amd64
 
 all: docker-build docker-push
 
