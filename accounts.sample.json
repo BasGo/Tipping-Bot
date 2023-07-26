@@ -1,0 +1,11 @@
+[
+    {
+        "email": "max.mustermann@gmx.de",
+        "password": "my_password",
+        "competition": "competition_name",
+        "high_diff_quotient": 7,
+        "overwrite_existing": false,
+        "hours_until_game": 2,
+        "strategy": "quotes"
+    }
+]
