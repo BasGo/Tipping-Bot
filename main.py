@@ -12,10 +12,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 # Constants
 
 BASE_URL = "https://www.kicktipp.de"
