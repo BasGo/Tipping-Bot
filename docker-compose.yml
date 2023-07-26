@@ -3,7 +3,7 @@ version: '3.7'
 services:
   bot:
     platform: linux/amd64
-    image: basgo/tipping-bot:amd64
+    image: bgogolin/tipping-bot:amd64
     container_name: tipping-bot
     restart: unless-stoped
     environment:
