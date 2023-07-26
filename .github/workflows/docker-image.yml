@@ -47,7 +47,7 @@ jobs:
         context: .
         file: ./Dockerfile.arm
         push: true
-        tags: basgo/tipping-bot:arm64
+        tags: bgogolin/tipping-bot:arm64
 
   # notify:
 
