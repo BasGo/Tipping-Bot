@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag basgo/tipping-bot
+      run: docker build . --file Dockerfile --tag bgogolin/tipping-bot
 
   push:
 
@@ -33,21 +33,13 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push the Docker image
+    - name: Build and push the Docker image (amd64)
       uses: docker/build-push-action@v2
       with:
         context: .
         file: ./Dockerfile.amd
         push: true
         tags: bgogolin/tipping-bot:amd64
-
-    - name: Build and push the Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./Dockerfile.arm
-        push: true
-        tags: bgogolin/tipping-bot:arm64
 
   # notify:
 
