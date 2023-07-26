@@ -39,7 +39,7 @@ jobs:
         context: .
         file: ./Dockerfile.amd
         push: true
-        tags: basgo/tipping-bot:amd64
+        tags: bgogolin/tipping-bot:amd64
 
     - name: Build and push the Docker image
       uses: docker/build-push-action@v2

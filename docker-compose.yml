@@ -3,14 +3,8 @@ version: '3.7'
 services:
   bot:
     platform: linux/amd64
-    image: basgo/tipping-bot:amd64
+    image: bgogolin/tipping-bot:amd64
     container_name: tipping-bot
     restart: unless-stoped
-    environment:
-      - KICKTIPP_EMAIL=${KICKTIPP_EMAIL}
-      - KICKTIPP_PASSWORD=${KICKTIPP_PASSWORD}
-      - KICKTIPP_NAME_OF_COMPETITION=${KICKTIPP_NAME_OF_COMPETITION}
-      - HIGH_DIFF_QUOTIENT = ${HIGH_DIFF_QUOTIENTdocker}
-      - OVERWRITE_TIPS = ${OVERWRITE_TIPS}
-      - HOURS_UNTIL_GAME = ${HOURS_UNTIL_GAME}
-      - ZAPIER_URL=${ZAPIER_URL}
+    volumes:
+      - config:/etc/tipping-bot
