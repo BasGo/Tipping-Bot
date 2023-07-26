@@ -28,7 +28,7 @@ class Account:
     hours_until_game: int
 
 def read_config():
-    with open("/etc/tipping-bot/accounts.json", "r") as file:
+    with open("/config/accounts.json", "r") as file:
         accounts = json.load(file)
 
     for account_json in accounts:
