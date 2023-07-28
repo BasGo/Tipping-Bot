@@ -19,8 +19,7 @@ BASE_URL = "https://www.kicktipp.de"
 LOGIN_URL = "https://www.kicktipp.de/info/profil/login"
 CHROMEDRIVER_PATH = os.getenv("CHROMEDRIVER_PATH")
 
-#logging.basicConfig(filename='/config/tipping-bot.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
-logging.basicConfig(filename='tipping-bot.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(filename='/config/tipping-bot.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 class Account:
     email : str
@@ -43,8 +42,7 @@ def writeDebugMessage(message: str, account: Account = None):
         logging.info(f'{name}{message}')
 
 def read_config():
-    #with open("/config/accounts.json", "r") as file:
-    with open("accounts.json", "r") as file:
+    with open("/config/accounts.json", "r") as file:
         accounts = json.load(file)
 
     for account_json in accounts:
