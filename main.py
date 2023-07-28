@@ -2,6 +2,7 @@ import os
 import random
 import sys
 import json
+import logging
 from datetime import datetime
 from datetime import timedelta
 from time import sleep
@@ -18,6 +19,8 @@ BASE_URL = "https://www.kicktipp.de"
 LOGIN_URL = "https://www.kicktipp.de/info/profil/login"
 CHROMEDRIVER_PATH = os.getenv("CHROMEDRIVER_PATH")
 
+logging.basicConfig(filename='/config/tipping-bot.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+
 class Account:
     email : str
     password: str
@@ -26,6 +29,10 @@ class Account:
     high_diff_quotient: int
     overwrite_existing: bool
     hours_until_game: int
+
+def writeDebugMessage(message: str):
+    print(message)
+    logging.debug(message)
 
 def read_config():
     with open("/config/accounts.json", "r") as file:
@@ -48,7 +55,7 @@ def execute(account: Account):
         elif sys.argv[1] == 'local':
             driver = webdriver.Chrome(CHROMEDRIVER_PATH)  # for local
     except IndexError:
-        print('Debug Mode\n')
+        writeDebugMessage('Debug Mode\n')
         driver = webdriver.Chrome()  # debug
 
     # login
@@ -111,35 +118,33 @@ def execute(account: Account):
 
                 # time until start of game
                 timeUntilGame = time - datetime.now()
-                print(F"{homeTeam} - {awayTeam} ({str(time.strftime('%d.%m.%y %H:%M'))}), Quotes: {str(quotes)}")
+                writeDebugMessage(F"{homeTeam} - {awayTeam} ({str(time.strftime('%d.%m.%y %H:%M'))}), Quotes: {str(quotes)}")
 
                 # only tip if game starts in less than 2 hours
                 if timeUntilGame < timedelta(hours=account.hours_until_game):
                     
                     tip = get_random_tip()
                     
-                    # calculate tips bases on quotes and print them
                     if account.strategy == "quotes":
                         tip = calculate_tip(float(quotes[0]), float(quotes[1]), float(quotes[2]), account)
 
                     # send tips
-                    print(F"Sending new tip: {tip[0]} - {tip[1]} (old was: {homeTipValue} - {awayTipValue})")
+                    writeDebugMessage(F"Sending new tip: {tip[0]} - {tip[1]} (old was: {homeTipValue} - {awayTipValue})")
                     homeTipEntry.clear()
                     homeTipEntry.send_keys(tip[0])
                     awayTipEntry.clear()
                     awayTipEntry.send_keys(tip[1])
 
-                    print()
+                    writeDebugMessage()
 
                 else:
-                    print(F"Game starts in more than {account.hours_until_game} hours. Skipping...")
-                    print()
+                    writeDebugMessage(F"Game starts in more than {account.hours_until_game} hours. Skipping...")
+                    writeDebugMessage()
             else:
-                # print out the tipped game
-                print(homeTeam + " - " + awayTeam)
+                writeDebugMessage(homeTeam + " - " + awayTeam)
 
-                print("Game already tipped! Tip: " + homeTipEntry.get_attribute('value') + " - " + awayTipEntry.get_attribute('value'))
-                print()
+                writeDebugMessage("Game already tipped! Tip: " + homeTipEntry.get_attribute('value') + " - " + awayTipEntry.get_attribute('value'))
+                writeDebugMessage()
 
         except NoSuchElementException:
             continue
@@ -150,7 +155,7 @@ def execute(account: Account):
 
     try:
         if sys.argv[1] == 'local':
-            print("Sleeping for 20secs to see the result - Debug Mode\n")
+            writeDebugMessage("Sleeping for 20secs to see the result - Debug Mode\n")
             sleep(20)
     except IndexError:
         pass
@@ -210,28 +215,28 @@ def account_from_dict(account_dict):
     return a
 
 def outputAccountValues(account: Account):
-    print("Current account:")
-    print(F" - eMail = {account.email}")
-    print(F" - Competition = {account.competition}")
-    print(F" - Overwrite tips = {account.overwrite_existing}")
-    print(F" - Strategy = {account.strategy}")
-    print(F" - High diff quotient = {account.high_diff_quotient}")
-    print(F" - Hours until game = {account.hours_until_game}")
-    print()
+    writeDebugMessage("Current account:")
+    writeDebugMessage(F" - eMail = {account.email}")
+    writeDebugMessage(F" - Competition = {account.competition}")
+    writeDebugMessage(F" - Overwrite tips = {account.overwrite_existing}")
+    writeDebugMessage(F" - Strategy = {account.strategy}")
+    writeDebugMessage(F" - High diff quotient = {account.high_diff_quotient}")
+    writeDebugMessage(F" - Hours until game = {account.hours_until_game}")
+    writeDebugMessage()
 
 def outputEnvValues():
-    print("Current environment variables:")
-    print(F" - CHROMEDRIVER_PATH = {CHROMEDRIVER_PATH}")
-    print()
+    writeDebugMessage("Current environment variables:")
+    writeDebugMessage(F" - CHROMEDRIVER_PATH = {CHROMEDRIVER_PATH}")
+    writeDebugMessage()
 
 if __name__ == '__main__':
     while True:
         now = datetime.now().strftime('%d.%m.%y %H:%M')
-        print(now + ": The script will execute now!\n")
+        writeDebugMessage(now + ": The script will execute now!\n")
         try:
             read_config()
         except Exception as e:
-            print("An error occured: " + str(e) + "\n")
+            writeDebugMessage("An error occured: " + str(e) + "\n")
         now = datetime.now().strftime('%d.%m.%y %H:%M')
-        print(now + ": The script has finished. Sleeping for 1 hour...\n")
+        writeDebugMessage(now + ": The script has finished. Sleeping for 1 hour...\n")
         sleep(60*60)
