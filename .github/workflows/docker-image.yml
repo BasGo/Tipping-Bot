@@ -15,9 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag bgogolin/tipping-bot
+      run: docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/tipping-bot
 
   push:
+    env:
+        ARCHITECTURE: 'amd64'
 
     name: Push Docker image to Docker Hub
 
@@ -33,13 +35,15 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push the Docker image (amd64)
+    - name: Build and push the Docker image for ${{env.ARCHITECTURE}}
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile.amd
+        file: ./Dockerfile.${{env.ARCHITECTURE}}
         push: true
-        tags: bgogolin/tipping-bot:amd64
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/tipping-bot:${{env.ARCHITECTURE}}
+          ${{ secrets.DOCKERHUB_USERNAME }}/tipping-bot:latest
 
   # notify:
 
