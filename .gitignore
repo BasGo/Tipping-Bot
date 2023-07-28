@@ -1,3 +1,4 @@
 chromedriver
 .env
 accounts.json
+tipping-bot.log
